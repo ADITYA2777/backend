@@ -1,8 +1,8 @@
 
 const mongoose = require('mongoose')
-const {schema}= mongoose;
+const {Schema}= mongoose;
 
-const UserSchema = new schema({
+const UserSchema = new Schema({
 name:{
     type:String,
 
@@ -23,5 +23,5 @@ forPasswordExpiryDate:{
     timesStamps:true
 });
 
-const userModel=mongoose.model('user',mongoose)
-module.exports=userModel
+const userModel = mongoose.model('user',UserSchema)
+module.exports = userModel
