@@ -1,5 +1,6 @@
 const userModel = require("../model/userSchema");
 const emailvalidator = require("email-validator")
+const bcrypt = require('bcrypt')
 
 const signup = async(req,res,next)=>{
 const {name,email,password,confirmpassword} = req.body;
@@ -48,10 +49,7 @@ const validEmail = emailvalidator.validate(email)
     }
 }
 
-
-
-try {
-    const signin = async(req,res)=>{
+    const signin =async (req,res)=>{
         const {email,password} = req.body
       
         if (!email || !password) {
@@ -60,27 +58,24 @@ try {
                message:'every felid is mandatory'
              });
         }
-      
+   try { 
         const user = await userModel
         .findOne({
           email
         })
-      
           .select('+password')
       
-          if (!user || user.password !==password) {
+          if (!user || !(await bcrypt.compare(password,user.password))){
               return res.status(400).json({
                   success:false,
                    message:'invalid credentials'
                  });
           }
-       }
-
-       const token = user.jwtToken();
-       user.password = undefined  
+          const token = user.jwtToken();
+       user.password = undefined ;
 
        const cookieOption = {
-        maxAge:24* 60* 60*1000,
+        maxAge:24 * 60 * 60 * 1000,
         httpOnly:true
        };
 
@@ -89,17 +84,54 @@ try {
         success: true,
         data:user
        })
-} catch (e) {
+      
+       } catch (e) {
      res.status(400).json({
         success:false,
         message:e.message
-     })
-}
+          })
+      }
+  }
  
+const getUser = async (req,res,next)=>{
+  const userId = req.user.id;
 
+  try {
+    const user = await userModel.findById(userId);
+    return res.status(200).json({
+      success: true,
+      data:user
+    })
+  } catch (e) {
+    res.status(400).json({
+      success:false,
+      message:e.message
+   })
+  }
+}
 
+const logout = (req,res)=>{
+  try {
+      const cookieOption ={
+        expries:new Date(),
+        httpOnly: true
+      };
+      res.cookie("token",null,cookieOption);
+      res.status(200).json({
+        success:true,
+        message:"logged out"
+      })
+  } catch (e) {
+    res.status(200).json({
+      success:false,
+      message:"logged out"
+    })
+  }
+}
 
 module.exports = {
     signup,
-    signin
+    signin,
+    getUser,
+    logout
 }

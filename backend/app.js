@@ -4,10 +4,19 @@ const app  = express();
 
 const authRoute = require('./routes/authRoutes.js');
 const databaseconnect =require('./config/configdb.js');
+const cookieParser = require('cookie-parser')
+const core = require('cors')
 
 databaseconnect();
 
-app.use(express.json())
+app.use(express.json());
+app.use(cookieParser());
+app.use(core({
+    origin:[process.env.CLIENT_URL],
+    credentials:true
+}));
+
+
 app.use('/api/auth/',authRoute);
 
 

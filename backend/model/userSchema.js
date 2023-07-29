@@ -1,7 +1,7 @@
 
 const mongoose = require('mongoose')
 const {Schema}= mongoose;
-const jwt =require('jsonwebtoken')
+const jWT =require('jsonwebtoken')
 
 const UserSchema = new Schema({
 name:{
@@ -21,17 +21,25 @@ email:{
 },
 password:{
     type:String,
+    select:false
 },
 forgotPasswordToken:{
-    type:String,
+    type:String
 },
 forPasswordExpiryDate:{
-    type:Date,
+    type:Date
 }
 },{
     timesStamps:true
 });
 
+UserSchema.pre('save',async function(next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+    this.password= await bcrypt(this.password,10)
+    return next();
+})
 UserSchema.methods = {
   jwtToken(){
     return jWT.sign(
